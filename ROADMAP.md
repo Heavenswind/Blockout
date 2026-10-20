@@ -6,7 +6,7 @@ Work I plan to do, roughly in order. Effort estimates are rough.
 
 - [ ] Copy, paste and mirror a selected area (box selection of tiles and objects)
 - [ ] Line and outline-only rectangle tools; wall-thickness option for rooms
-- [ ] Coalesce typing in text fields into a single undo step
+- [x] Coalesce typing in text fields into a single undo step
 - [ ] Custom terrain palette per level (name, colour, walkable), saved in the file
 - [ ] Multiple floors / layers with stairs that link them
 - [ ] Minimap and "zoom to fit" button

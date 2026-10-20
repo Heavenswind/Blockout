@@ -6,10 +6,14 @@ import { FLOOR, type Level, type ObjectType } from './model/types';
 
 export type Tool = 'paint' | 'room' | 'rect' | 'fill' | 'object' | 'select';
 
+/** Edits with the same merge key this close together undo as one step (typing in a text field). */
+const MERGE_MS = 1000;
+
 interface EditorState {
   history: History<Level>;
   /** The level as it was when the current drag began; the whole drag becomes one undo step. */
   strokeBase: Level | null;
+  lastMerge: { key: string; at: number } | null;
 
   tool: Tool;
   terrain: number;
@@ -18,8 +22,8 @@ interface EditorState {
   showPath: boolean;
   showReach: boolean;
 
-  /** Applies an edit as its own undo step. */
-  edit: (fn: (l: Level) => Level) => void;
+  /** Applies an edit as its own undo step, or folds it into the previous one when `mergeKey` matches. */
+  edit: (fn: (l: Level) => Level, mergeKey?: string) => void;
   beginStroke: () => void;
   /** Applies an edit inside a drag. `fn` receives the level from before the drag, so previews can be redrawn from scratch. */
   strokeEdit: (fn: (base: Level, current: Level) => Level) => void;
@@ -40,6 +44,7 @@ export const useEditor = create<EditorState>()(
     (set) => ({
       history: historyOf(sampleLevel()),
       strokeBase: null,
+      lastMerge: null,
       tool: 'room',
       terrain: FLOOR,
       objectType: 'enemy',
@@ -47,8 +52,17 @@ export const useEditor = create<EditorState>()(
       showPath: true,
       showReach: true,
 
-      edit: (fn) => set((s) => ({ history: commit(s.history, fn(s.history.present)) })),
-      beginStroke: () => set((s) => ({ strokeBase: s.history.present })),
+      edit: (fn, mergeKey) =>
+        set((s) => {
+          const next = fn(s.history.present);
+          const now = Date.now();
+          const merge = mergeKey !== undefined && s.lastMerge?.key === mergeKey && now - s.lastMerge.at < MERGE_MS;
+          return {
+            history: merge ? replace(s.history, next) : commit(s.history, next),
+            lastMerge: mergeKey ? { key: mergeKey, at: now } : null,
+          };
+        }),
+      beginStroke: () => set((s) => ({ strokeBase: s.history.present, lastMerge: null })),
       strokeEdit: (fn) =>
         set((s) => (s.strokeBase ? { history: replace(s.history, fn(s.strokeBase, s.history.present)) } : {})),
       endStroke: () =>
@@ -59,9 +73,9 @@ export const useEditor = create<EditorState>()(
           const rewound = { ...history, present: strokeBase };
           return { history: commit(rewound, history.present), strokeBase: null };
         }),
-      undo: () => set((s) => ({ history: undo(s.history), strokeBase: null })),
-      redo: () => set((s) => ({ history: redo(s.history), strokeBase: null })),
-      load: (l) => set({ history: historyOf(l), strokeBase: null, selectedId: null }),
+      undo: () => set((s) => ({ history: undo(s.history), strokeBase: null, lastMerge: null })),
+      redo: () => set((s) => ({ history: redo(s.history), strokeBase: null, lastMerge: null })),
+      load: (l) => set({ history: historyOf(l), strokeBase: null, selectedId: null, lastMerge: null }),
 
       setTool: (tool) => set({ tool }),
       setTerrain: (terrain) => set({ terrain }),

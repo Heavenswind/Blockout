@@ -18,7 +18,7 @@ export function LevelPanel() {
       <h2>Level</h2>
       <label className="field">
         <span>Name</span>
-        <input value={level.name} onChange={(e) => { const name = e.target.value; edit((l) => ({ ...l, name })); }} />
+        <input value={level.name} onChange={(e) => { const name = e.target.value; edit((l) => ({ ...l, name }), 'level-name'); }} />
       </label>
       <div className="row">
         <label className="field small">
@@ -58,7 +58,7 @@ export function ObjectPanel() {
       <label className="field">
         <span>Label</span>
         <input value={obj.label} placeholder={obj.type === 'enemy' ? 'e.g. rat' : obj.type === 'pickup' ? 'e.g. key' : ''}
-          onChange={(e) => { const value = e.target.value; edit((l) => updateObject(l, obj.id, { label: value })); }} />
+          onChange={(e) => { const value = e.target.value; edit((l) => updateObject(l, obj.id, { label: value }), `label-${obj.id}`); }} />
       </label>
       <div className="row">
         <button className="danger" onClick={() => { edit((l) => removeObject(l, obj.id)); select(null); }}>Delete</button>
