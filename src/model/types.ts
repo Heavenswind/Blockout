@@ -32,6 +32,11 @@ export interface LevelObject {
   y: number;
   /** Free text: enemy kind, pickup kind, note text… shown on the map and exported. */
   label: string;
+  /**
+   * Doors: the key that opens it (empty or missing: always open).
+   * Pickups: the key this pickup is (empty or missing: not a key).
+   */
+  key?: string;
 }
 
 export interface Level {

@@ -139,6 +139,7 @@ export function assertLevel(data: unknown): asserts data is Level {
   if (!Array.isArray(tiles) || tiles.length !== width! * height!) throw new Error('Tile data does not match the level size');
   if (tiles.some((t) => !Number.isInteger(t) || t < 0 || t >= TERRAINS.length)) throw new Error('Unknown terrain in tile data');
   if (!Array.isArray(objects)) throw new Error('Level file is missing objects');
+  if (objects.some((o) => o?.key !== undefined && typeof o.key !== 'string')) throw new Error('An object has a key that is not text');
 }
 
 /** A small made-up level shown on first launch: two rooms, a corridor, a locked-off side room. */

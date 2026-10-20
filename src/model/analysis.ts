@@ -10,18 +10,23 @@ export interface Problem {
   message: string;
 }
 
-export function isWalkable(l: Level, x: number, y: number): boolean {
+/**
+ * Doors make any cell walkable. With `keys`, a locked door only opens if its key is among them;
+ * without, every door counts as open.
+ */
+export function isWalkable(l: Level, x: number, y: number, keys?: ReadonlySet<string>): boolean {
   if (!inBounds(l, x, y)) return false;
-  if (l.objects.some((o) => o.type === 'door' && o.x === x && o.y === y)) return true;
+  const door = l.objects.find((o) => o.type === 'door' && o.x === x && o.y === y);
+  if (door) return !door.key || !keys || keys.has(door.key);
   return TERRAINS[tileAt(l, x, y)]?.walkable ?? false;
 }
 
 const NEIGHBOURS = [[1, 0], [-1, 0], [0, 1], [0, -1]] as const;
 
 /** Breadth-first search over walkable cells. Returns the distance (in steps) to every reachable cell, -1 elsewhere. */
-export function distancesFrom(l: Level, start: Cell): Int32Array {
+export function distancesFrom(l: Level, start: Cell, keys?: ReadonlySet<string>): Int32Array {
   const dist = new Int32Array(l.width * l.height).fill(-1);
-  if (!isWalkable(l, start.x, start.y)) return dist;
+  if (!isWalkable(l, start.x, start.y, keys)) return dist;
   const queue: Cell[] = [start];
   dist[start.y * l.width + start.x] = 0;
   for (let head = 0; head < queue.length; head++) {
@@ -29,7 +34,7 @@ export function distancesFrom(l: Level, start: Cell): Int32Array {
     const d = dist[c.y * l.width + c.x];
     for (const [dx, dy] of NEIGHBOURS) {
       const x = c.x + dx, y = c.y + dy;
-      if (!isWalkable(l, x, y) || dist[y * l.width + x] !== -1) continue;
+      if (!isWalkable(l, x, y, keys) || dist[y * l.width + x] !== -1) continue;
       dist[y * l.width + x] = d + 1;
       queue.push({ x, y });
     }
@@ -37,9 +42,23 @@ export function distancesFrom(l: Level, start: Cell): Int32Array {
   return dist;
 }
 
+/**
+ * Flood fill that treats locked doors as walls until their key has been picked up, repeating
+ * until no new key turns up. Returns the final distances and the keys the player can collect.
+ */
+export function explore(l: Level, start: Cell): { dist: Int32Array; keys: Set<string> } {
+  const keys = new Set<string>();
+  for (;;) {
+    const dist = distancesFrom(l, start, keys);
+    const found = l.objects.filter((o) => o.type === 'pickup' && o.key && !keys.has(o.key) && dist[o.y * l.width + o.x] >= 0);
+    if (found.length === 0) return { dist, keys };
+    for (const k of found) keys.add(k.key!);
+  }
+}
+
 /** Shortest walkable path between two cells, inclusive, or null if there isn't one. */
-export function shortestPath(l: Level, from: Cell, to: Cell): Cell[] | null {
-  const dist = distancesFrom(l, from);
+export function shortestPath(l: Level, from: Cell, to: Cell, keys?: ReadonlySet<string>): Cell[] | null {
+  const dist = distancesFrom(l, from, keys);
   if (!inBounds(l, to.x, to.y) || dist[to.y * l.width + to.x] < 0) return null;
   // Walk back downhill from the target.
   const path: Cell[] = [to];
@@ -91,26 +110,55 @@ export function analyse(l: Level): Analysis {
   }
 
   if (spawn && isWalkable(l, spawn.x, spawn.y)) {
-    const dist = distancesFrom(l, spawn);
+    // `dist` follows the keys the player can actually collect; `open` pretends every door is open.
+    const { dist, keys } = explore(l, spawn);
+    const open = distancesFrom(l, spawn);
+    const reached = (d: Int32Array, o: LevelObject) => d[o.y * l.width + o.x] >= 0 || (o.type === 'door' && doorReachable(l, d, o));
     reachableCells = dist.reduce((n, d) => n + (d >= 0 ? 1 : 0), 0);
     for (const o of l.objects) {
-      if (o.type === 'note' || o.type === 'spawn') continue;
-      if (dist[o.y * l.width + o.x] < 0 && !(o.type === 'door' && doorReachable(l, dist, o))) {
-        unreachable.add(o.id);
-        problems.push({
-          severity: o.type === 'goal' ? 'error' : 'warning',
-          objectId: o.id,
-          message: `${label(o)} can't be reached from the spawn`,
-        });
-      }
+      if (o.type === 'note' || o.type === 'spawn' || reached(dist, o)) continue;
+      unreachable.add(o.id);
+      problems.push({
+        severity: o.type === 'goal' ? 'error' : 'warning',
+        objectId: o.id,
+        message: reached(open, o)
+          ? `${label(o)} is behind a locked door: ${lockedDoorsAround(l, dist, keys)}`
+          : `${label(o)} can't be reached from the spawn`,
+      });
     }
     const goals = l.objects
       .filter((o) => o.type === 'goal' && dist[o.y * l.width + o.x] >= 0)
       .sort((a, b) => dist[a.y * l.width + a.x] - dist[b.y * l.width + b.x]);
-    if (goals[0]) criticalPath = shortestPath(l, spawn, goals[0]);
+    if (goals[0]) criticalPath = shortestPath(l, spawn, goals[0], keys);
   }
 
+  problems.push(...keyProblems(l));
   return { problems, unreachable, criticalPath, walkableCells, reachableCells, counts };
+}
+
+/** The locked doors at the edge of what the player can reach, and why each stays shut. */
+function lockedDoorsAround(l: Level, dist: Int32Array, keys: ReadonlySet<string>): string {
+  const reasons = l.objects
+    .filter((o) => o.type === 'door' && o.key && !keys.has(o.key) && doorReachable(l, dist, o))
+    .map((door) => {
+      const givers = l.objects.filter((o) => o.type === 'pickup' && o.key === door.key);
+      return `${label(door)} needs key "${door.key}", which ${givers.length ? "the player can't reach" : 'no pickup gives'}`;
+    });
+  return reasons.length ? reasons.join('; ') : 'no door on the way can be opened';
+}
+
+/** Doors whose key doesn't exist, and keys that open nothing. */
+function keyProblems(l: Level): Problem[] {
+  const out: Problem[] = [];
+  const doors = l.objects.filter((o) => o.type === 'door' && o.key);
+  const keyPickups = l.objects.filter((o) => o.type === 'pickup' && o.key);
+  for (const d of doors)
+    if (!keyPickups.some((k) => k.key === d.key))
+      out.push({ severity: 'warning', objectId: d.id, message: `${label(d)} needs key "${d.key}", but no pickup is that key` });
+  for (const k of keyPickups)
+    if (!doors.some((d) => d.key === k.key))
+      out.push({ severity: 'warning', objectId: k.id, message: `${label(k)} is key "${k.key}", but no door needs it` });
+  return out;
 }
 
 // A door counts as reached if the player can stand next to it, even when it leads nowhere yet.
