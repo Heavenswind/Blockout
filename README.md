@@ -13,8 +13,9 @@ I'm building it to plan levels for my own games. It complements [Forge](https://
   - Place objects, and select and drag them.
 - **Terrain:** floor, wall, water, hazard, grass and empty. Each terrain is either walkable or blocking.
 - **Objects:** spawn, goal, enemy, pickup, door and note, each with a free-text label ("rat", "key", "ladder up"). Doors make wall cells passable.
+- **Keys and locked doors:** give a door a key name and it stays shut until the player picks up a pickup with that key. Keys show as K and locked doors as a padlock, both labelled with the key name.
 - **Live analysis:**
-  - Reachability from the spawn: unreachable floor is tinted red and unreachable objects are circled.
+  - Reachability from the spawn: unreachable floor is tinted red and unreachable objects are circled. It follows keys: anything behind a door whose key the player can't get is reported with the reason, e.g. a key locked behind its own door.
   - The shortest spawn-to-goal path is drawn on the map.
   - A Problems panel lists missing spawns, unreachable goals and objects stuck in walls.
   - Stats show walkable area, % reachable, path length and object counts.
@@ -33,7 +34,7 @@ Requires Node.js 20 or newer.
 ```sh
 npm install
 npm run dev        # http://localhost:5173
-npm test           # unit tests for editing, reachability and undo
+npm test           # unit tests for editing, reachability, keys and undo
 npm run build      # production build in dist/
 ```
 
