@@ -81,6 +81,8 @@ export interface Analysis {
   unreachable: Set<string>;
   /** Spawn-to-goal path for the first reachable goal. */
   criticalPath: Cell[] | null;
+  /** Steps from the spawn to every cell the player can reach with the keys they can collect; null without a usable spawn. */
+  reach: Int32Array | null;
   walkableCells: number;
   reachableCells: number;
   counts: Record<LevelObject['type'], number>;
@@ -97,6 +99,7 @@ export function analyse(l: Level): Analysis {
   const spawn = spawnOf(l);
   const unreachable = new Set<string>();
   let criticalPath: Cell[] | null = null;
+  let reach: Int32Array | null = null;
   let reachableCells = 0;
 
   if (!spawn) problems.push({ severity: 'error', message: 'No player spawn. Place one with the Spawn tool.' });
@@ -113,7 +116,8 @@ export function analyse(l: Level): Analysis {
     // `dist` follows the keys the player can actually collect; `open` pretends every door is open.
     const { dist, keys } = explore(l, spawn);
     const open = distancesFrom(l, spawn);
-    const reached = (d: Int32Array, o: LevelObject) => d[o.y * l.width + o.x] >= 0 || (o.type === 'door' && doorReachable(l, d, o));
+    reach = dist;
+    const reached =(d: Int32Array, o: LevelObject) => d[o.y * l.width + o.x] >= 0 || (o.type === 'door' && doorReachable(l, d, o));
     reachableCells = dist.reduce((n, d) => n + (d >= 0 ? 1 : 0), 0);
     for (const o of l.objects) {
       if (o.type === 'note' || o.type === 'spawn' || reached(dist, o)) continue;
@@ -133,7 +137,7 @@ export function analyse(l: Level): Analysis {
   }
 
   problems.push(...keyProblems(l));
-  return { problems, unreachable, criticalPath, walkableCells, reachableCells, counts };
+  return { problems, unreachable, criticalPath, reach, walkableCells, reachableCells, counts };
 }
 
 /** The locked doors at the edge of what the player can reach, and why each stays shut. */

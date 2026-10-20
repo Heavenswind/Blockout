@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Analysis } from '../model/analysis';
-import { distancesFrom, isWalkable, spawnOf } from '../model/analysis';
+import { isWalkable } from '../model/analysis';
 import { drawRoom, floodFill, inBounds, lineCells, moveObject, objectAt, placeObject, rectCells, removeObject, setTiles } from '../model/level';
 import { EMPTY, type Cell, type Level } from '../model/types';
 import { drawLevel } from '../render/draw';
@@ -20,14 +20,13 @@ type Drag =
   | { kind: 'shape'; start: Cell; erase: boolean }
   | { kind: 'move'; id: string };
 
-function unreachableMask(l: Level): Uint8Array | null {
-  const spawn = spawnOf(l);
-  if (!spawn || !isWalkable(l, spawn.x, spawn.y)) return null;
-  const dist = distancesFrom(l, spawn);
+/** Walkable floor the player can't get to, keys and locked doors included. */
+function unreachableMask(l: Level, reach: Int32Array | null): Uint8Array | null {
+  if (!reach) return null;
   const mask = new Uint8Array(l.width * l.height);
   for (let y = 0; y < l.height; y++) {
     for (let x = 0; x < l.width; x++) {
-      if (dist[y * l.width + x] < 0 && isWalkable(l, x, y)) mask[y * l.width + x] = 1;
+      if (reach[y * l.width + x] < 0 && isWalkable(l, x, y)) mask[y * l.width + x] = 1;
     }
   }
   return mask;
@@ -66,7 +65,7 @@ export function MapCanvas({ analysis, onHover }: { analysis: Analysis; onHover: 
     return () => window.removeEventListener('blockout:fit', onFit);
   });
 
-  const mask = showReach ? unreachableMask(level) : null;
+  const mask = showReach ? unreachableMask(level, analysis.reach) : null;
 
   useEffect(() => {
     const canvas = canvasRef.current!;

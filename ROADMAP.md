@@ -13,7 +13,7 @@ Work I plan to do, roughly in order. Effort estimates are rough.
 
 ## Gameplay checks (≈7 h)
 
-- [ ] Keys and locked doors: reachability that understands "you need the key first", and reports soft-locks
+- [x] Keys and locked doors: reachability that understands "you need the key first", and reports soft-locks
 - [ ] Enemy and pickup density heatmap, per room
 - [ ] Line-of-sight preview from a cell (for stealth and ambush placement)
 - [ ] Movement rules: diagonal moves, one-way tiles, jump gaps over pits

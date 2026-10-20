@@ -60,6 +60,16 @@ export function ObjectPanel() {
         <input value={obj.label} placeholder={obj.type === 'enemy' ? 'e.g. rat' : obj.type === 'pickup' ? 'e.g. key' : ''}
           onChange={(e) => { const value = e.target.value; edit((l) => updateObject(l, obj.id, { label: value }), `label-${obj.id}`); }} />
       </label>
+      {(obj.type === 'door' || obj.type === 'pickup') && (
+        <label className="field">
+          <span>{obj.type === 'door' ? 'Needs key' : 'Is key'}</span>
+          <input value={obj.key ?? ''} list="level-keys" placeholder={obj.type === 'door' ? 'empty: always open' : 'empty: not a key'}
+            onChange={(e) => { const key = e.target.value.trim(); edit((l) => updateObject(l, obj.id, { key: key || undefined }), `key-${obj.id}`); }} />
+          <datalist id="level-keys">
+            {[...new Set(level.objects.map((o) => o.key).filter(Boolean))].map((k) => <option key={k} value={k} />)}
+          </datalist>
+        </label>
+      )}
       <div className="row">
         <button className="danger" onClick={() => { edit((l) => removeObject(l, obj.id)); select(null); }}>Delete</button>
       </div>

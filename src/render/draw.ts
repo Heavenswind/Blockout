@@ -87,12 +87,27 @@ function drawObject(ctx: CanvasRenderingContext2D, obj: LevelObject, o: DrawOpti
   ctx.fill();
   ctx.stroke();
 
+  const isKey = obj.type === 'pickup' && !!obj.key;
+  const isLocked = obj.type === 'door' && !!obj.key;
   if (cell >= 12) {
     ctx.fillStyle = '#0d1020';
     ctx.font = `bold ${Math.round(cell * 0.42)}px system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(style.letter, cx, cy + 1);
+    ctx.fillText(isKey ? 'K' : style.letter, cx, cy + 1);
+  }
+
+  if (isLocked && cell >= 12) {
+    // A small padlock in the door's top-right corner: shackle arc over a body.
+    const s = cell * 0.22;
+    const px = (obj.x + 1) * cell - s * 1.1, py = obj.y * cell + s * 1.3;
+    ctx.fillStyle = '#f4c15d';
+    ctx.strokeStyle = '#f4c15d';
+    ctx.lineWidth = Math.max(1, cell / 18);
+    ctx.beginPath();
+    ctx.arc(px, py, s * 0.45, Math.PI, 0);
+    ctx.stroke();
+    ctx.fillRect(px - s * 0.7, py, s * 1.4, s * 1.05);
   }
 
   if (o.unreachable.has(obj.id)) {
@@ -111,15 +126,17 @@ function drawObject(ctx: CanvasRenderingContext2D, obj: LevelObject, o: DrawOpti
     ctx.strokeRect(obj.x * cell + 1, obj.y * cell + 1, cell - 2, cell - 2);
   }
 
-  if (o.labels && obj.label && cell >= 18) {
+  // Keys and locks show their key name, so matching pairs are easy to spot.
+  const text = isKey || isLocked ? `${obj.label ? `${obj.label} ` : ''}[${obj.key}]` : obj.label;
+  if (o.labels && text && cell >= 18) {
     ctx.font = `${Math.max(10, Math.round(cell * 0.4))}px system-ui, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
-    const tw = ctx.measureText(obj.label).width;
+    const tw = ctx.measureText(text).width;
     ctx.fillStyle = 'rgba(13, 16, 32, 0.75)';
     ctx.fillRect(cx - tw / 2 - 3, (obj.y + 1) * cell, tw + 6, cell * 0.5);
     ctx.fillStyle = '#e6e8ee';
-    ctx.fillText(obj.label, cx, (obj.y + 1) * cell + 1);
+    ctx.fillText(text, cx, (obj.y + 1) * cell + 1);
   }
 }
 
