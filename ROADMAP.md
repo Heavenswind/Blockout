@@ -37,5 +37,5 @@ Work I plan to do, roughly in order. Effort estimates are rough.
 
 - [ ] Component tests for the tools (pointer events on the canvas)
 - [ ] File format migrations when the version number changes
-- [ ] GitHub Actions: typecheck, test and build on every push
+- [x] GitHub Actions: typecheck, test and build on every push
 - [ ] Deploy the editor to GitHub Pages
