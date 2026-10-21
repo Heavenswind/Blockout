@@ -133,6 +133,7 @@ export function MapCanvas({ analysis, onHover }: { analysis: Analysis; onHover: 
       }
       case 'room':
       case 'rect':
+      case 'line':
         if (!inBounds(s.history.present, c.x, c.y)) return;
         s.beginStroke();
         drag.current = { kind: 'shape', start: c, erase };
@@ -170,7 +171,8 @@ export function MapCanvas({ analysis, onHover }: { analysis: Analysis; onHover: 
 
   const applyShape = (start: Cell, end: Cell, erase: boolean) => {
     const s = useEditor.getState();
-    if (erase) s.strokeEdit((base) => setTiles(base, rectCells(start, end), EMPTY));
+    if (s.tool === 'line') s.strokeEdit((base) => setTiles(base, lineCells(start, end), erase ? EMPTY : s.terrain));
+    else if (erase) s.strokeEdit((base) => setTiles(base, rectCells(start, end), EMPTY));
     else if (s.tool === 'room') s.strokeEdit((base) => drawRoom(base, start, end));
     else s.strokeEdit((base) => setTiles(base, rectCells(start, end), s.terrain));
   };

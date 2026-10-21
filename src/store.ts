@@ -4,7 +4,7 @@ import { commit, historyOf, redo, replace, undo, type History } from './model/hi
 import { assertLevel, sampleLevel } from './model/level';
 import { FLOOR, type Level, type ObjectType } from './model/types';
 
-export type Tool = 'paint' | 'room' | 'rect' | 'fill' | 'object' | 'select';
+export type Tool = 'paint' | 'room' | 'rect' | 'line' | 'fill' | 'object' | 'select';
 
 /** Edits with the same merge key this close together undo as one step (typing in a text field). */
 const MERGE_MS = 1000;

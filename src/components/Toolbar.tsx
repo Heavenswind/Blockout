@@ -10,6 +10,7 @@ const TOOLS: { tool: Tool; label: string; key: string; hint: string }[] = [
   { tool: 'room', label: 'Room', key: 'r', hint: 'Drag a rectangle: floor inside, walls around' },
   { tool: 'paint', label: 'Paint', key: 'b', hint: 'Paint tiles; right-drag erases' },
   { tool: 'rect', label: 'Rect', key: 'x', hint: 'Fill a rectangle with the current terrain' },
+  { tool: 'line', label: 'Line', key: 'l', hint: 'Drag a straight line of the current terrain; right-drag erases' },
   { tool: 'fill', label: 'Fill', key: 'f', hint: 'Bucket-fill a connected area' },
   { tool: 'object', label: 'Place', key: 'o', hint: 'Place the chosen object; right-click removes' },
   { tool: 'select', label: 'Select', key: 'v', hint: 'Select and drag objects; drag empty space to pan' },
@@ -35,6 +36,7 @@ export function Toolbar() {
         else if (e.key.toLowerCase() === 'y') { e.preventDefault(); s.redo(); }
         return;
       }
+      if (e.key === '0') { window.dispatchEvent(new Event('blockout:fit')); return; }
       const t = TOOLS.find((t) => t.key === e.key.toLowerCase());
       if (t) s.setTool(t.tool);
     };
@@ -120,6 +122,7 @@ export function Toolbar() {
       <div className="group">
         <button disabled={!canUndo} onClick={undo} title="Undo (Ctrl+Z)">Undo</button>
         <button disabled={!canRedo} onClick={redo} title="Redo (Ctrl+Y)">Redo</button>
+        <button onClick={fit} title="Zoom to fit the level (0)">Fit</button>
       </div>
       <div className="group">
         <button onClick={() => replaceWith('new')}>{armed === 'new' ? 'Click again to clear' : 'New'}</button>
