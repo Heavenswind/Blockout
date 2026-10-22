@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Analysis } from '../model/analysis';
 import { isWalkable } from '../model/analysis';
-import { drawRoom, floodFill, inBounds, lineCells, moveObject, objectAt, placeObject, rectCells, removeObject, setTiles } from '../model/level';
+import { drawRoom, floodFill, inBounds, lineCells, moveObject, objectAt, placeObject, rectCells, rectOutlineCells, removeObject, setTiles } from '../model/level';
 import { EMPTY, type Cell, type Level } from '../model/types';
 import { drawLevel } from '../render/draw';
 import { useEditor, useLevel } from '../store';
@@ -134,6 +134,7 @@ export function MapCanvas({ analysis, onHover }: { analysis: Analysis; onHover: 
       case 'room':
       case 'rect':
       case 'line':
+      case 'frame':
         if (!inBounds(s.history.present, c.x, c.y)) return;
         s.beginStroke();
         drag.current = { kind: 'shape', start: c, erase };
@@ -172,6 +173,7 @@ export function MapCanvas({ analysis, onHover }: { analysis: Analysis; onHover: 
   const applyShape = (start: Cell, end: Cell, erase: boolean) => {
     const s = useEditor.getState();
     if (s.tool === 'line') s.strokeEdit((base) => setTiles(base, lineCells(start, end), erase ? EMPTY : s.terrain));
+    else if (s.tool === 'frame') s.strokeEdit((base) => setTiles(base, rectOutlineCells(start, end), erase ? EMPTY : s.terrain));
     else if (erase) s.strokeEdit((base) => setTiles(base, rectCells(start, end), EMPTY));
     else if (s.tool === 'room') s.strokeEdit((base) => drawRoom(base, start, end));
     else s.strokeEdit((base) => setTiles(base, rectCells(start, end), s.terrain));

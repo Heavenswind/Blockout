@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { analyse, isWalkable, shortestPath } from './analysis';
 import { commit, historyOf, redo, replace, undo } from './history';
 import {
-  assertLevel, createLevel, drawRoom, floodFill, lineCells, moveObject, placeObject, rectCells, resize, sampleLevel, setTiles, tileAt,
+  assertLevel, createLevel, drawRoom, floodFill, lineCells, moveObject, placeObject, rectCells, rectOutlineCells, resize, sampleLevel, setTiles, tileAt,
 } from './level';
 import { FLOOR, WALL, type Level } from './types';
 
@@ -26,6 +26,17 @@ describe('editing', () => {
   it('draws gap-free lines', () => {
     expect(lineCells({ x: 0, y: 0 }, { x: 3, y: 1 })).toHaveLength(4);
     expect(lineCells({ x: 2, y: 2 }, { x: 2, y: 2 })).toEqual([{ x: 2, y: 2 }]);
+  });
+
+  it('outlines a rectangle without filling the inside', () => {
+    const cells = rectOutlineCells({ x: 3, y: 2 }, { x: 0, y: 0 });
+    expect(cells).toHaveLength(10);
+    expect(cells).not.toContainEqual({ x: 1, y: 1 });
+    expect(cells).toContainEqual({ x: 0, y: 0 });
+    expect(cells).toContainEqual({ x: 3, y: 2 });
+    // Degenerate rectangles collapse to a line or a single cell, without duplicates.
+    expect(rectOutlineCells({ x: 2, y: 5 }, { x: 2, y: 3 })).toEqual([{ x: 2, y: 3 }, { x: 2, y: 4 }, { x: 2, y: 5 }]);
+    expect(rectOutlineCells({ x: 1, y: 1 }, { x: 1, y: 1 })).toEqual([{ x: 1, y: 1 }]);
   });
 
   it('flood fills one region only', () => {

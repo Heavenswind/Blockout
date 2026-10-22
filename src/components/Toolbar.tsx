@@ -11,6 +11,7 @@ const TOOLS: { tool: Tool; label: string; key: string; hint: string }[] = [
   { tool: 'paint', label: 'Paint', key: 'b', hint: 'Paint tiles; right-drag erases' },
   { tool: 'rect', label: 'Rect', key: 'x', hint: 'Fill a rectangle with the current terrain' },
   { tool: 'line', label: 'Line', key: 'l', hint: 'Drag a straight line of the current terrain; right-drag erases' },
+  { tool: 'frame', label: 'Frame', key: 'e', hint: 'Drag a rectangle outline of the current terrain, inside untouched; right-drag erases' },
   { tool: 'fill', label: 'Fill', key: 'f', hint: 'Bucket-fill a connected area' },
   { tool: 'object', label: 'Place', key: 'o', hint: 'Place the chosen object; right-click removes' },
   { tool: 'select', label: 'Select', key: 'v', hint: 'Select and drag objects; drag empty space to pan' },

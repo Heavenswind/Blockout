@@ -53,6 +53,19 @@ export function rectCells(a: Cell, b: Cell): Cell[] {
   return cells;
 }
 
+/** Only the border cells of the rectangle, for walls and fences without a filled inside. */
+export function rectOutlineCells(a: Cell, b: Cell): Cell[] {
+  const x0 = Math.min(a.x, b.x), x1 = Math.max(a.x, b.x);
+  const y0 = Math.min(a.y, b.y), y1 = Math.max(a.y, b.y);
+  const cells: Cell[] = [];
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      if (x === x0 || x === x1 || y === y0 || y === y1) cells.push({ x, y });
+    }
+  }
+  return cells;
+}
+
 /** A room: floor inside, walls around the edge. Existing floor on the edge is kept, so rooms can share an opening. */
 export function drawRoom(l: Level, a: Cell, b: Cell): Level {
   const x0 = Math.min(a.x, b.x), x1 = Math.max(a.x, b.x);
