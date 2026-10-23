@@ -46,6 +46,8 @@ input[type='checkbox'] { padding: 0; }
 }
 .toolbar .logo { font-size: 16px; letter-spacing: 0.5px; margin-right: 4px; }
 .toolbar .group { display: flex; align-items: center; gap: 4px; }
+.toolbar .walls { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--muted); }
+.toolbar .walls input { width: 44px; }
 .swatch, .obj { border-left: 12px solid var(--swatch); }
 
 .workspace { flex: 1; display: flex; min-height: 0; }

@@ -66,14 +66,18 @@ export function rectOutlineCells(a: Cell, b: Cell): Cell[] {
   return cells;
 }
 
-/** A room: floor inside, walls around the edge. Existing floor on the edge is kept, so rooms can share an opening. */
-export function drawRoom(l: Level, a: Cell, b: Cell): Level {
+/**
+ * A room: floor inside, walls around the edge, `walls` cells thick.
+ * Existing floor on the edge is kept, so rooms can share an opening.
+ */
+export function drawRoom(l: Level, a: Cell, b: Cell, walls = 1): Level {
+  const t = Math.max(1, Math.round(walls));
   const x0 = Math.min(a.x, b.x), x1 = Math.max(a.x, b.x);
   const y0 = Math.min(a.y, b.y), y1 = Math.max(a.y, b.y);
   const edge: Cell[] = [];
   const inside: Cell[] = [];
   for (const c of rectCells(a, b)) {
-    (c.x === x0 || c.x === x1 || c.y === y0 || c.y === y1 ? edge : inside).push(c);
+    (c.x < x0 + t || c.x > x1 - t || c.y < y0 + t || c.y > y1 - t ? edge : inside).push(c);
   }
   const withFloor = setTiles(l, inside, FLOOR);
   return setTiles(withFloor, edge.filter((c) => tileAt(withFloor, c.x, c.y) !== FLOOR), WALL);

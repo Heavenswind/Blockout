@@ -175,7 +175,7 @@ export function MapCanvas({ analysis, onHover }: { analysis: Analysis; onHover: 
     if (s.tool === 'line') s.strokeEdit((base) => setTiles(base, lineCells(start, end), erase ? EMPTY : s.terrain));
     else if (s.tool === 'frame') s.strokeEdit((base) => setTiles(base, rectOutlineCells(start, end), erase ? EMPTY : s.terrain));
     else if (erase) s.strokeEdit((base) => setTiles(base, rectCells(start, end), EMPTY));
-    else if (s.tool === 'room') s.strokeEdit((base) => drawRoom(base, start, end));
+    else if (s.tool === 'room') s.strokeEdit((base) => drawRoom(base, start, end, s.roomWalls));
     else s.strokeEdit((base) => setTiles(base, rectCells(start, end), s.terrain));
   };
 

@@ -18,6 +18,8 @@ interface EditorState {
   tool: Tool;
   terrain: number;
   objectType: ObjectType;
+  /** Wall thickness of new rooms, in cells. */
+  roomWalls: number;
   selectedId: string | null;
   showPath: boolean;
   showReach: boolean;
@@ -35,6 +37,7 @@ interface EditorState {
   setTool: (tool: Tool) => void;
   setTerrain: (terrain: number) => void;
   setObjectType: (type: ObjectType) => void;
+  setRoomWalls: (walls: number) => void;
   select: (id: string | null) => void;
   toggle: (key: 'showPath' | 'showReach') => void;
 }
@@ -48,6 +51,7 @@ export const useEditor = create<EditorState>()(
       tool: 'room',
       terrain: FLOOR,
       objectType: 'enemy',
+      roomWalls: 1,
       selectedId: null,
       showPath: true,
       showReach: true,
@@ -80,6 +84,7 @@ export const useEditor = create<EditorState>()(
       setTool: (tool) => set({ tool }),
       setTerrain: (terrain) => set({ terrain }),
       setObjectType: (objectType) => set({ objectType, tool: 'object' }),
+      setRoomWalls: (walls) => set({ roomWalls: Math.max(1, Math.min(8, Math.round(walls) || 1)) }),
       select: (selectedId) => set({ selectedId }),
       toggle: (key) => set((s) => ({ [key]: !s[key] }) as Pick<EditorState, typeof key>),
     }),

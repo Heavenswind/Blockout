@@ -20,7 +20,7 @@ const TOOLS: { tool: Tool; label: string; key: string; hint: string }[] = [
 const OBJECT_TYPES = Object.keys(OBJECT_STYLE) as ObjectType[];
 
 export function Toolbar() {
-  const { tool, terrain, objectType, setTool, setTerrain, setObjectType, undo, redo, load } = useEditor();
+  const { tool, terrain, objectType, roomWalls, setTool, setTerrain, setObjectType, setRoomWalls, undo, redo, load } = useEditor();
   const canUndo = useEditor((s) => s.history.past.length > 0);
   const canRedo = useEditor((s) => s.history.future.length > 0);
   const fileInput = useRef<HTMLInputElement>(null);
@@ -88,6 +88,19 @@ export function Toolbar() {
             {t.label}
           </button>
         ))}
+        {tool === 'room' && (
+          <label className="walls" title="Wall thickness of new rooms, in cells">
+            Walls
+            <input
+              type="number"
+              min={1}
+              max={8}
+              step={1}
+              value={roomWalls}
+              onChange={(e) => setRoomWalls(Number(e.target.value))}
+            />
+          </label>
+        )}
       </div>
 
       <div className="group" aria-label="Terrain">

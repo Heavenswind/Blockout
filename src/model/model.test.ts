@@ -16,6 +16,13 @@ describe('editing', () => {
     expect(ascii(l)).toEqual(['#####', '#...#', '#...#', '#####']);
   });
 
+  it('draws rooms with thicker walls when asked', () => {
+    const l = drawRoom(createLevel(7, 5), { x: 0, y: 0 }, { x: 6, y: 4 }, 2);
+    expect(ascii(l)).toEqual(['#######', '#######', '##...##', '#######', '#######']);
+    // Too small for the thickness: solid wall.
+    expect(ascii(drawRoom(createLevel(3, 3), { x: 0, y: 0 }, { x: 2, y: 2 }, 2))).toEqual(['###', '###', '###']);
+  });
+
   it('keeps existing floor on a room edge so rooms can connect', () => {
     let l = drawRoom(createLevel(7, 3), { x: 0, y: 0 }, { x: 3, y: 2 });
     l = setTiles(l, [{ x: 3, y: 1 }], FLOOR);
